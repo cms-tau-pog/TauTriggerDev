@@ -1,0 +1,7 @@
+/.law
+__pycache__
+.DS_Store
+__init__.py
+ComputeRate/result*
+jobs/
+logs/
