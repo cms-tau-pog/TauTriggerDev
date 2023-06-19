@@ -44,7 +44,7 @@ class HTCondorWorkflow(law.htcondor.HTCondorWorkflow):
         config.custom_content.append(("getenv", "true"))
         log_path = os.path.join(global_path, "logs")
         os.makedirs(log_path, exist_ok=True)
-        config.custom_content.append(("log", os.path.join(log_path, 'job.$(ClusterId).$(branches).log')))
-        config.custom_content.append(("output", os.path.join(log_path, 'job.$(ClusterId).$(branches).out')))
-        config.custom_content.append(("error", os.path.join(log_path, 'job.$(ClusterId).$(branches).err')))
+        config.custom_content.append(("log", os.path.join(log_path, f'job.$(ClusterId).{branches}.log')))
+        config.custom_content.append(("output", os.path.join(log_path, f'job.$(ClusterId).{branches}.out')))
+        config.custom_content.append(("error", os.path.join(log_path, f'job.$(ClusterId).{branches}.err')))
         return config

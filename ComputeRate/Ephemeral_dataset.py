@@ -42,7 +42,8 @@ class Ephemeral:
     
     def L1DoubleIsoTau34er2p1_selection(self, events):
         # Apply L1_DoubleIsoTau34er2p1 filter 
-        l1_mask = (events.L1Tau_hwPt >= 0x44) & (events.L1Tau_hwEta <= 0x30) & (events.L1Tau_eta >= -2.131) & (events.L1Tau_hwIso > 0 )
+        #l1_mask = (events.L1Tau_hwPt >= 0x44) & (events.L1Tau_hwEta <= 0x30) & (events.L1Tau_eta >= -2.131) & (events.L1Tau_hwIso > 0 )
+        l1_mask = (events.L1Tau_hwPt >= 0x44) & (events.L1Tau_hwEta <= 0x30) & (events.L1Tau_hwEta >= -49) & (events.L1Tau_hwIso > 0 )
         ev_mask = ak.sum(l1_mask, axis=-1) >= 2 # at least 2 taus with pt eta iso
         events = events[ev_mask]
         print(f"Number of events with at least 2 isolated L1 taus (L1Tau_hwIso > 0) with pt >= 34 and |eta| <= 2.131: {len(events)}")
@@ -127,19 +128,21 @@ class Ephemeral:
             raise('Error in selection')
         events = self.matching_L1taus_taus(events, taus, L1taus)
         N_num = len(events)
+        print('')
         return N_den, N_num
 
-    def get_Nnum_Nden_L1(self, run, lumiSections_range):
+    def get_Nnum_Nden_L1DoubleIsoTau34er2p1(self, run, lumiSections_range):
         events = self.get_events_run_lumi(run, lumiSections_range)
         N_den = len(events)
         events = self.L1DoubleIsoTau34er2p1_selection(events)
         N_num = len(events)
+        print('')
         return N_den, N_num
     
-    def get_Nnum_Nden_HLTflag(self, run, lumiSections_range, HLTname):
+    def get_Nnum_Nden_flag(self, run, lumiSections_range, flagname):
         events = self.get_events_run_lumi(run, lumiSections_range)
         N_den = len(events)
-        events_HLT = events[events[HLTname]]
-        print(f"Number of event that pass {HLTname}: {len(events_HLT)}")
+        events_HLT = events[events[flagname]]
         N_num = len(events_HLT)
+        print('')
         return N_den, N_num
