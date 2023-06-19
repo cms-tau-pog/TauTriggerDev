@@ -16,6 +16,7 @@ class ComputeRate(Task, HTCondorWorkflow, law.LocalWorkflow):
     output_path = config['DATA']['output_path']
     HLT_name = config['HLT']['HLTname']
     EphemeralFolder = config['DATA']['EphemeralFolder']
+    runArea = config['RUNINFO']['Area']
 
     def create_branch_map(self):
         os.makedirs(self.output_path, exist_ok=True)
@@ -29,9 +30,7 @@ class ComputeRate(Task, HTCondorWorkflow, law.LocalWorkflow):
         return law.LocalFileTarget(path)
 
     def run(self):
-
-
-        EphemeralFolderName = self.EphemeralFolder + f"EphemeralHLTPhysics{self.branch}_Run2022G/"
+        EphemeralFolderName = self.EphemeralFolder + f"EphemeralHLTPhysics{self.branch}_Run{self.runArea}/"
         event_counter = {}
         print(f"-----------------------------------------------Processing folder {self.branch}-----------------------------------------------")
         FileNameList = files_from_path(EphemeralFolderName)
@@ -39,7 +38,8 @@ class ComputeRate(Task, HTCondorWorkflow, law.LocalWorkflow):
             event_counter[FileName] = {}
             print(f"For {FileName.replace(self.EphemeralFolder, '')}:")
             eph_dataset = Ephemeral(FileName)
-            N_den_i, N_num_i = eph_dataset.compute_rate(run = self.RefRun, lumiSections_range = self.LumiSectionsRange, HLTname = self.HLT_name)
+            #N_den_i, N_num_i = eph_dataset.compute_rate(run = self.RefRun, lumiSections_range = self.LumiSectionsRange, HLTname = self.HLT_name)
+            N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(run = self.RefRun, lumiSections_range = self.LumiSectionsRange)
             event_counter[FileName]['N_den'] = N_den_i
             event_counter[FileName]['N_num'] = N_num_i
 
