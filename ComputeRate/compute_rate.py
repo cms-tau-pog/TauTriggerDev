@@ -34,16 +34,16 @@ print(f"Total number of events belonging to run {RefRun} and in LumiSections ran
 
 if mode == 'HLTflag':
     print(f"... and passing {HLT_name}: {N_num}")
-    print(f"HLT rate in cms oms: {HLT_rate}")
+    print(f"{HLT_name} rate in cms oms: {HLT_rate}")
 if mode == 'HLTlogic':
     print(f"... and passing {HLT_name} conditions: {N_num}")
-    print(f"HLT rate in cms oms: {HLT_rate}")
+    print(f"{HLT_name} rate in cms oms: {HLT_rate}")
 if mode == 'L1lflag':
     print(f"... and passing {L1_name}: {N_num}")
-    print(f"L1 rate in cms oms: {L1_rate}")
+    print(f"{L1_name} rate in cms oms: {L1_rate}")
 if mode == 'L1logic':
     print(f"... and passing {L1_name} conditions: {N_num}")
-    print(f"L1 rate in cms oms: {L1_rate}")
+    print(f"{L1_name} rate in cms oms: {L1_rate}")
 
 print('Computed rate: ')
 print(f"Eff : {eff*L1A_physics}")

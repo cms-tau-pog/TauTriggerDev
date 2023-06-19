@@ -49,7 +49,7 @@ class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
             if self.mode == 'HLTlogic':
                 N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(run = self.RefRun, lumiSections_range = self.LumiSectionsRange)
             if self.mode == 'L1lflag':
-                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_flag(run = self.RefRun, lumiSections_range = self.LumiSectionsRange, HLTname = self.L1_name)
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_flag(run = self.RefRun, lumiSections_range = self.LumiSectionsRange, flagname = self.L1_name)
             if self.mode == 'L1logic':
                 N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_L1DoubleIsoTau34er2p1(run = self.RefRun, lumiSections_range = self.LumiSectionsRange)
             event_counter[FileName]['N_den'] = N_den_i
