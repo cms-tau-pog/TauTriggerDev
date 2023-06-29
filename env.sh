@@ -25,7 +25,7 @@ action() {
     fi
     unset __conda_setup
     
-    conda activate HNL
+    conda activate PnetEnv
 
     source "$( law completion )" ""
 }

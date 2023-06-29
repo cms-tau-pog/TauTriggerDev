@@ -5,3 +5,4 @@ __init__.py
 ComputeRate/result*
 jobs/
 logs/
+test.py

@@ -1,5 +1,7 @@
 # Study: use of Pnet information at HLT level
 
+integration of ParticleNet algorithm for tau-identification into HLT
+
 ##  Requirements
 
 You only need a CERN account, with access to DAS: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookLocatingDataSamples
