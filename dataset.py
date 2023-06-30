@@ -55,21 +55,6 @@ class Dataset:
         events = uproot.dask(tree_path, library='ak')
         return events
 
-    def get_events_run_lumi(self, run, lumiSections_range, debug_mode = True):
-        events = self.get_events()
-        if debug_mode:
-            print(f"Number of events: {len(events)}")
-        events = events[events['run'] == run]
-        if debug_mode:
-            print(f"Number of events belonging to run {run}: {len(events)}")
-        events = events[(events["luminosityBlock"] >= lumiSections_range[0]) & (events["luminosityBlock"] <= lumiSections_range[1])]
-        if debug_mode:
-            print(f"Number of event in LumiSections range {lumiSections_range}: {len(events)}")
-            print(f"   - events passing L1_DoubleIsoTau34er2p1 flag: {len(events[events['L1_DoubleIsoTau34er2p1'].compute()])}")
-            print(f"   - events passing HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1 flag: {len(events[events['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1'].compute()])}")
-
-        return events
-
     def get_GenLepton(self, events):
         from ComputeEfficiency.GenLeptonCode.helpers import get_GenLepton_rdf
         # Add GenLepton information to RdataFrame
@@ -323,10 +308,70 @@ class Dataset:
         return
 
 # ------------------------------ functions for ComputeRate ---------------------------------------------------------------
-    def get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(self, run, lumiSections_range):
+    def Save_Event_Nden_Rate(self, tmp_file, run, lumiSections_range):
+        ''' 
+        Save only needed informations (for numerator cuts) of events passing denominator cuts 
+        '''
+        events = self.get_events()
+        N_events = len(events)
+        print(f"Number of events: {N_events}")
+        events = events[events['run'] == run]
+        print(f"Number of events belonging to run {run}: {len(events)}")
+        events = events[(events["luminosityBlock"] >= lumiSections_range[0]) & (events["luminosityBlock"] <= lumiSections_range[1])]
+        print(f"Number of event in LumiSections range {lumiSections_range}: {len(events)}")
+        Nevents_L1 = len(events[events['L1_DoubleIsoTau34er2p1'].compute()])
+        print(f"   - events passing L1_DoubleIsoTau34er2p1 flag: {Nevents_L1}")
+        Nevents_HLT = len(events[events['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1'].compute()])
+        print(f"   - events passing HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1 flag: {Nevents_HLT}")
+
+        # list of all info you need to save
+        saved_info_events = ['Tau_pt', 
+                             'Tau_eta', 
+                             'Tau_phi', 
+                             'Tau_deepTauVSjet', 
+                             'L1Tau_pt', 
+                             'L1Tau_eta', 
+                             'L1Tau_phi', 
+                             'L1Tau_hwPt', 
+                             'L1Tau_hwEta', 
+                             'L1Tau_hwIso', 
+                             'L1Tau_l2Tag',
+                             'Jet_PNet_probtauhm',
+                             'Jet_PNet_probtauhp',
+                             'Jet_PNet_ptcorr',
+                             'Jet_pt',
+                             'Jet_eta',
+                             'Jet_phi',
+                             'L1_DoubleIsoTau34er2p1',
+                             'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1']
+        
+        if len(events)!= 0:
+            print('Saving info in tmp file')
+            lst = {}
+            for element in saved_info_events:
+                lst[element] = events[element].compute()
+            lst['Nevents_init'] = np.ones(len(events))*N_events
+
+            with uproot.create(tmp_file, compression=uproot.ZLIB(4)) as file:
+                file["Events"] = lst
+        else:
+            print('No events to save')
+        return
+
+    def get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(self):
         #load all events in the file that belong to the run and lumiSections_range, and save the number of events in Denominator
-        events = self.get_events_run_lumi(run, lumiSections_range)
+        events = self.get_events()
         N_den = len(events)
+        print(f"Number of events in denominator: {len(events)}")
+
+        '''
+        L1Tau_mask = (events['L1Tau_hwPt'].compute() >= 0x44) & (events['L1Tau_hwEta'].compute() <= 0x30) & (events['L1Tau_hwEta'].compute() >= -49) & (events['L1Tau_hwIso'].compute() > 0 )
+        evt_mask = (ak.sum(L1Tau_mask, axis=-1) >= 2)
+        events = events[evt_mask]
+        print(f"Number of events after L1 selection: {len(events)}")
+        print('')
+        N_num = len(events)
+        '''
 
         # Selection of L1 object and reco Tau objects for HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1 path
         L1Tau_mask = self.L1Tau_selection(events)
@@ -338,40 +383,28 @@ class Dataset:
         # Get L1 and Tau to apply HLT condition
         L1Taus = self.get_L1Taus(events)
         Taus = self.get_Taus(events) 
-        #Taus = Taus[Tau_mask[evt_mask]]
-        #L1Taus = L1Taus[L1Tau_mask[evt_mask]]
+        Taus = Taus[Tau_mask[evt_mask]]
+        L1Taus = L1Taus[L1Tau_mask[evt_mask]]
         # ------------------
         # apply all condition except L2NN and Iso on L1Tau
-        L1Taus = L1Taus[(L1Taus.pt >= 34) & (np.abs(L1Taus.eta) <= 2.131)]
+        #L1Taus = L1Taus[(L1Taus.pt >= 34) & (np.abs(L1Taus.eta) <= 2.131)]
         # apply all condition except DeepTau on Tau
-        Taus = Taus[(Taus.pt >= 35) & (np.abs(Taus.eta) <= 2.1)]
+        #Taus = Taus[(Taus.pt >= 35) & (np.abs(Taus.eta) <= 2.1)]
         # ------------------
         # do the matching between the 2 objects
         matching_taus_mask = self.matching_Taus_obj(L1Taus, Taus, dR_matching_min = 0.5)
-
-        '''
-        index = 17
-        print(f'Taus.pt : {Taus.pt[index]}')
-        print(f'L1Taus.pt : {L1Taus.pt[index]}')
-        print(f'L1Taus.Iso : {L1Taus.Iso[index]}')
-        print(f'L1Taus.L2NN : {(events["L1Tau_l2Tag"].compute()[(L1Taus.pt >= 34) & (np.abs(L1Taus.eta) <= 2.131)])[index]}')
-        taus_inpair, obj_inpair = ak.unzip(ak.cartesian([Taus, L1Taus], nested=True))
-        dR_taus_obj = delta_r(taus_inpair, obj_inpair)
-        print(f'dR :')
-        print(dR_taus_obj[index])
-        print(f'matching_taus_mask : {matching_taus_mask[index]}')
-        '''
 
         evt_mask = (ak.sum(matching_taus_mask, axis=-1) >= 2) # at least 2 Taus should match L1Tau
         events = events[evt_mask]
         print(f"Number of events after matching: {len(events)}")
         print('')
         N_num = len(events)
+        
         return N_den, N_num
     
-    def get_Nnum_Nden_DiTauPNet(self, run, lumiSections_range, treshold):
+    def get_Nnum_Nden_DiTauPNet(self, treshold):
         #load all events in the file that belong to the run and lumiSections_range, and save the number of events in Denominator
-        events = self.get_events_run_lumi(run, lumiSections_range)
+        events = self.get_events()
         N_den = len(events)
 
         # Selection of L1 object and reco Jet objects for DiTauPNet path

@@ -15,7 +15,7 @@ class SaveEventsDenEfficiency(Task, HTCondorWorkflow, law.LocalWorkflow):
     tmp_folder = config['DATA']['tmpPath']
     HLT_name = config['HLT']['HLTname']
     MCDataFolderNames = list(filter(None, (x.strip() for x in config['DATA']['MCDataFolderNames'].splitlines())))
-    output_path = os.path.join(config['DATA']['AnatuplePath'], HLT_name)
+    output_path = os.path.join(config['DATA']['EffDenPath'], HLT_name)
     
     def create_branch_map(self):
         os.makedirs(self.output_path, exist_ok=True)
@@ -57,7 +57,7 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
     '''
     config = load_cfg_file()
     HLT_name = config['HLT']['HLTname']
-    input_path = os.path.join(config['DATA']['AnatuplePath'], HLT_name)
+    input_path = os.path.join(config['DATA']['EffDenPath'], HLT_name)
     MCDataFolderNames = list(filter(None, (x.strip() for x in config['DATA']['MCDataFolderNames'].splitlines())))
     PNet_treshold = config['OPT']['PNet_treshold']
     if PNet_treshold == 'None':
@@ -68,6 +68,13 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
         PNetTreshold = float(PNet_treshold)     
         output_path = os.path.join(config['DATA']['result_eff'], f'PNetTresh_{PNetTreshold}')
 
+    # requires SaveEventsDenEfficiency for Den events
+    def workflow_requires(self):
+        return { "Counter": SaveEventsDenEfficiency.req(self, branch=self.branch) }
+
+    def requires(self):
+        return self.workflow_requires()
+    
     def create_branch_map(self):
         os.makedirs(self.output_path, exist_ok=True)
         branches = {}

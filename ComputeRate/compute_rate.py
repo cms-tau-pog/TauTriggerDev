@@ -10,6 +10,7 @@ RefRun = int(config['RUNINFO']['ref_run'])
 LumiSectionsRange = [int(config['RUNINFO']['LumiSectionsRange_low']), int(config['RUNINFO']['LumiSectionsRange_up'])]
 HLT_name = config['HLT']['HLTname']
 HLT_rate = config['HLT']['HLT_rate']
+runArea = config['RUNINFO']['Area']
 
 PNet_treshold = config['OPT']['PNet_treshold']
 if PNet_treshold == 'None':
@@ -24,7 +25,7 @@ else:
 N_den = 0
 N_num = 0
 for i in range(number_of_ephemeral_folder):
-    f = open(os.path.join(path_result, f"folder_{i}.json"))
+    f = open(os.path.join(path_result, f'EphemeralHLTPhysics{i}_Run{runArea}.json'))
     data = json.load(f)
     for file in data.keys():
         N_den += data[file]['N_den']

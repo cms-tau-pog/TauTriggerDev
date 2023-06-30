@@ -3,6 +3,7 @@ __pycache__
 .DS_Store
 __init__.py
 ComputeRate/result*
+ComputeEfficiency/result*
 jobs/
 logs/
 test.py
