@@ -2,13 +2,13 @@
 import law
 import os
 import shutil
-from dataset import Dataset
+from HLTClass.dataset import Dataset
 from helpers import files_from_path, load_cfg_file, hadd_anatuple
 from law_customizations import Task, HTCondorWorkflow
 
 class SaveEventsDenRate(Task, HTCondorWorkflow, law.LocalWorkflow):
     '''
-    Produce root file where Events passing denominator selection are saved 
+    Produce root file where Events passing denominator selection (run and lumiSection) are saved 
     '''
     config = load_cfg_file()
     RefRun = int(config['RUNINFO']['ref_run'])
@@ -57,6 +57,7 @@ class SaveEventsDenRate(Task, HTCondorWorkflow, law.LocalWorkflow):
         shutil.rmtree(output_tmp_folder)
         return
     
+    
 class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
     '''
     Produce json files where number of events which pass denominator and numerator criteria are saved from each ephemerals files
@@ -66,17 +67,17 @@ class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
     number_of_ephemeral_folder = int(config['DATA']['number_of_ephemeral_folder'])
     HLT_name = config['HLT']['HLTname']
     runArea = config['RUNINFO']['Area']
-    PNet_treshold = config['OPT']['PNet_treshold']
     intput_root = os.path.join(config['DATA']['RateDenPath'], f'Run_{RefRun}')
     output_path = os.path.join(config['DATA']['result_rate'], f'result_{RefRun}')
 
-    if PNet_treshold == 'None':
-        PNetConfig = False
-        output_path = os.path.join(output_path, HLT_name)
+    PNet_mode = config['OPT']['PNet_mode']
+    if PNet_mode == 'false':
+        PNetMode = False
+        output_path = os.path.join(output_path, HLT_name, HLT_name)
     else:
-        PNetConfig = True
-        PNetTreshold = float(PNet_treshold)
-        output_path = os.path.join(output_path, f'PNetTresh_{PNetTreshold}')
+        PNetMode = True
+        PNetparam = [float(config['OPT']['PNet_t1']), float(config['OPT']['PNet_t2']), float(config['OPT']['PNet_t3'])]
+        output_path = os.path.join(output_path, HLT_name, f'PNetTresh_{config["OPT"]["PNet_t1"]}_{config["OPT"]["PNet_t2"]}_{config["OPT"]["PNet_t3"]}')
 
     # requires SaveEventsDenRate for Den events
     def workflow_requires(self):
@@ -104,11 +105,29 @@ class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
         event_counter = {}
         event_counter[intput_root_file] = {}
         print(f"For {os.path.basename(intput_root_file)}:")
-        eph_dataset = Dataset(intput_root_file)
-        if self.PNetConfig:
-            N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_DiTauPNet(treshold = self.PNetTreshold)
-        else:
-            N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1()
+
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        if self.HLT_name not in HLT_config:
+            print(f'HLT name {self.HLT_name} not implemented in the code')
+            raise
+        
+        if self.HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
+            from HLTClass.DiTauDataset import DiTauDataset
+            
+            eph_dataset = DiTauDataset(intput_root_file)
+            if self.PNetMode:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_DiTauPNet(self.PNetparam)
+            else:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1()
+
+        if self.HLT_name == 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3':
+            from HLTClass.SingleTauDataset import SingleTauDataset
+            
+            eph_dataset = SingleTauDataset(intput_root_file)
+            if self.PNetMode:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_SingleTauPNet(self.PNetparam)
+            else:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3()
 
         event_counter[intput_root_file]['N_den'] = N_den_i
         event_counter[intput_root_file]['N_num'] = N_num_i

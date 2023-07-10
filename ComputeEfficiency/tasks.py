@@ -2,7 +2,6 @@
 import law
 import os
 import shutil
-from dataset import Dataset
 from helpers import files_from_path, load_cfg_file, hadd_anatuple
 from law_customizations import Task, HTCondorWorkflow
 
@@ -32,19 +31,32 @@ class SaveEventsDenEfficiency(Task, HTCondorWorkflow, law.LocalWorkflow):
         print(f"-----------------------------------------------Processing folder {self.MCDataFolderNames[self.branch]}-----------------------------------------------")
         MCFolderName = os.path.join(self.MCDataPath, self.MCDataFolderNames[self.branch])
         output_root_file = os.path.join(self.output_path, f'{self.MCDataFolderNames[self.branch]}.root')
-        output_tmp_folder = os.path.join(self.tmp_folder, self.MCDataFolderNames[self.branch])
+        output_tmp_folder = os.path.join(self.tmp_folder, self.HLT_name, self.MCDataFolderNames[self.branch])
         if os.path.exists(output_tmp_folder):
             print(f'A tmp folder which store tmp anatuple files exist already: being deleted')
             shutil.rmtree(output_tmp_folder)
         os.makedirs(output_tmp_folder)
+
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        if self.HLT_name not in HLT_config:
+            print(f'HLT name {self.HLT_name} not implemented in the code')
+            raise
 
         # Produce tmp files
         FileNameList = files_from_path(MCFolderName)
         for FileName in FileNameList:
             print(f"Producing tmp file for {os.path.basename(FileName)}:")
             output_tmp_file = os.path.join(output_tmp_folder, os.path.basename(FileName))
-            MC_dataset = Dataset(FileName)
-            MC_dataset.save_Event_Nden(output_tmp_file)
+
+            if self.HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
+                from HLTClass.DiTauDataset import DiTauDataset
+                MC_dataset = DiTauDataset(FileName)
+                MC_dataset.save_Event_Nden_eff_DiTau(output_tmp_file)
+
+            if self.HLT_name == 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3':
+                from HLTClass.SingleTauDataset import SingleTauDataset
+                MC_dataset = SingleTauDataset(FileName)
+                MC_dataset.save_Event_Nden_eff_SingleTau(output_tmp_file)
 
         # Hadd the tmp files to a single root file
         hadd_anatuple(output_tmp_folder, output_root_file)
@@ -59,14 +71,15 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
     HLT_name = config['HLT']['HLTname']
     input_path = os.path.join(config['DATA']['EffDenPath'], HLT_name)
     MCDataFolderNames = list(filter(None, (x.strip() for x in config['DATA']['MCDataFolderNames'].splitlines())))
-    PNet_treshold = config['OPT']['PNet_treshold']
-    if PNet_treshold == 'None':
-        PNetConfig = False
-        output_path = os.path.join(config['DATA']['result_eff'], HLT_name)
+
+    PNet_mode = config['OPT']['PNet_mode']
+    if PNet_mode == 'false':
+        PNetMode = False
+        output_path = os.path.join(config['DATA']['result_eff'], HLT_name, HLT_name)
     else:
-        PNetConfig = True
-        PNetTreshold = float(PNet_treshold)     
-        output_path = os.path.join(config['DATA']['result_eff'], f'PNetTresh_{PNetTreshold}')
+        PNetMode = True
+        PNetparam = [float(config['OPT']['PNet_t1']), float(config['OPT']['PNet_t2']), float(config['OPT']['PNet_t3'])]
+        output_path = os.path.join(config['DATA']['result_eff'], HLT_name, f'PNetTresh_{config["OPT"]["PNet_t1"]}_{config["OPT"]["PNet_t2"]}_{config["OPT"]["PNet_t3"]}')
 
     # requires SaveEventsDenEfficiency for Den events
     def workflow_requires(self):
@@ -94,9 +107,25 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
         if not os.path.exists(input_root_file):
             raise('Input root file does not exist')
 
-        MC_dataset = Dataset(input_root_file)
-        if self.PNetConfig:
-            MC_dataset.produceRoot_DiTauPNet(output_root_file, self.PNetTreshold)
-        else:
-            MC_dataset.produceRoot_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(output_root_file)
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        if self.HLT_name not in HLT_config:
+            print(f'HLT name {self.HLT_name} not implemented in the code')
+            raise
 
+        if self.HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
+            from HLTClass.DiTauDataset import DiTauDataset
+
+            MC_dataset = DiTauDataset(input_root_file)
+            if self.PNetMode:
+                MC_dataset.produceRoot_DiTauPNet(output_root_file, self.PNetparam)
+            else:
+                MC_dataset.produceRoot_HLTDoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(output_root_file)
+
+        if self.HLT_name == 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3':
+            from HLTClass.SingleTauDataset import SingleTauDataset
+
+            MC_dataset = SingleTauDataset(input_root_file)
+            if self.PNetMode:
+                MC_dataset.produceRoot_SingleTauPNet(output_root_file, self.PNetparam)
+            else:
+                MC_dataset.produceRoot_HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3(output_root_file)

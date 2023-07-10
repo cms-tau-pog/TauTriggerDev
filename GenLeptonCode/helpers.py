@@ -1,7 +1,7 @@
 import ROOT
 import os
 
-ROOT.gInterpreter.Declare(f'#include "{os.getenv("RUN_PATH")}/ComputeEfficiency/GenLeptonCode/GenLepton.h"')
+ROOT.gInterpreter.Declare(f'#include "{os.getenv("RUN_PATH")}/GenLeptonCode/GenLepton.h"')
 
 def get_GenLepton_rdf(rdf):
     rdf = rdf.Define("GenLeptons", "reco_tau::gen_truth::GenLepton::fromNanoAOD(GenPart_pt, GenPart_eta, GenPart_phi, GenPart_mass, GenPart_genPartIdxMother, GenPart_pdgId, GenPart_statusFlags)")

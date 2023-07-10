@@ -12,14 +12,14 @@ HLT_name = config['HLT']['HLTname']
 HLT_rate = config['HLT']['HLT_rate']
 runArea = config['RUNINFO']['Area']
 
-PNet_treshold = config['OPT']['PNet_treshold']
-if PNet_treshold == 'None':
-    PNetConfig = False
-    path_result = os.path.join(config['DATA']['result_rate'], f'result_{RefRun}', HLT_name)
+PNet_mode = config['OPT']['PNet_mode']
+if PNet_mode == 'false':
+    PNetMode = False
+    path_result = os.path.join(config['DATA']['result_rate'], f'result_{RefRun}', HLT_name, HLT_name)
 else:
-    PNetConfig = True
-    PNetTreshold = float(PNet_treshold)
-    path_result = os.path.join(config['DATA']['result_rate'], f'result_{RefRun}', f'PNetTresh_{PNetTreshold}/')
+    PNetMode = True
+    PNetparam = [float(config['OPT']['PNet_t1']), float(config['OPT']['PNet_t2']), float(config['OPT']['PNet_t3'])]
+    path_result = os.path.join(config['DATA']['result_rate'], f'result_{RefRun}', HLT_name, f'PNetTresh_{config["OPT"]["PNet_t1"]}_{config["OPT"]["PNet_t2"]}_{config["OPT"]["PNet_t3"]}')
 
 # compute sum of all Nevents in all the files
 N_den = 0
@@ -37,8 +37,8 @@ eff, err_low, err_up = compute_eff_witherr(N_num, N_den)
 
 print(f"Total number of events belonging to run {RefRun} and in LumiSections range {LumiSectionsRange}: {N_den}")
 
-if PNetConfig:
-    print(f"... and passing {HLT_name} conditions without DeepTau, and using PNet with treshold {PNetTreshold}: {N_num}")
+if PNetMode:
+    print(f"... and passing {HLT_name} conditions without DeepTau, and using PNet with param {PNetparam}: {N_num}")
 else:
     print(f"... and passing {HLT_name} conditions: {N_num}")
     print(f"For comparison, {HLT_name} rate in cms oms is {HLT_rate}")

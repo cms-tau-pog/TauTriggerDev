@@ -5,15 +5,16 @@ import awkward as ak
 
 config = load_cfg_file()
 HLT_name = config['HLT']['HLTname']
-PNet_treshold = config['OPT']['PNet_treshold']
 MCDataFolderNames = list(filter(None, (x.strip() for x in config['DATA']['MCDataFolderNames'].splitlines())))
-if PNet_treshold == 'None':
-    PNetConfig = False
-    output_path = os.path.join(config['DATA']['result_eff'], HLT_name)
+
+PNet_mode = config['OPT']['PNet_mode']
+if PNet_mode == 'false':
+    PNetMode = False
+    output_path = os.path.join(config['DATA']['result_eff'], HLT_name, HLT_name)
 else:
-    PNetConfig = True
-    PNetTreshold = float(PNet_treshold)     
-    output_path = os.path.join(config['DATA']['result_eff'], f'PNetTresh_{PNetTreshold}')
+    PNetMode = True
+    PNetparam = [float(config['OPT']['PNet_t1']), float(config['OPT']['PNet_t2']), float(config['OPT']['PNet_t3'])]
+    output_path = os.path.join(config['DATA']['result_eff'], HLT_name, f'PNetTresh_{config["OPT"]["PNet_t1"]}_{config["OPT"]["PNet_t2"]}_{config["OPT"]["PNet_t3"]}')
 
 N_den = 0
 N_num = 0
@@ -30,13 +31,16 @@ for i in range(len(MCDataFolderNames)):
 
 eff, err_low, err_up = compute_eff_witherr(N_num, N_den)
 
-print(f"Total number of hadronic GenTaus with with vis. pt <= 20 and eta< 2.1: {N_den}")
-if PNetConfig:
-    print(f"Total number of GenTaus matching with Jet passing {HLT_name} requirements with Pnet: {N_num}")
-else:
-    print(f"Total number of GenTaus matching with Tau passing {HLT_name} requirements: {N_num}")
+if HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
+    print(f"Total number of hadronic GenTaus with with vis. pt <= 20 and eta< 2.1: {N_den}")
+    if PNetMode:
+        print(f"Total number of GenTaus matching with Jet/L1Tau passing DiTau path with Pnet param {PNetparam}: {N_num}")
+    else:
+        print(f"Total number of GenTaus matching with Tau/L1Tau passing {HLT_name} requirements: {N_num}")
 
 print('Computed rate: ')
 print(f"Eff : {eff}")
 print(f"Eff_up : {err_low}")
 print(f"Eff_down : {err_up}")
+
+
