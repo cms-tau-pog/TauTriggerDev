@@ -1,35 +1,30 @@
 from helpers import files_from_path, load_cfg_file
 import os
 from scipy.optimize import minimize
-import math
 from HLTClass.SingleTauDataset import SingleTauDataset
 import numpy as np
+from Optimisation.helpers_opt import loss
 
-def loss(rate, rate_budget = 17):
-    k = math.log(2) / 0.1
-    if rate <= rate_budget:
-        return 0
-    if rate > (rate_budget + 0.1):
-        return 1
-    return math.exp(k * (rate - rate_budget)) - 1
+def run_optimization(dataset_rate, dataset_eff, rate_budget):
+    config = load_cfg_file()
+    PNetparam_t3 = float(config['OPT']['PNet_t3'])
 
-def run_optimization(dataset_rate, dataset_eff):
     def f(a):
-        # Pnet_chargeprob > 0
-        a = np.append(a, [0])
+        a = np.append(a, [PNetparam_t3])
+
         N_den, N_num = dataset_rate.get_Nnum_Nden_SingleTauPNet(a)
         rate = (N_num/N_den)*L1A_physics
 
         N_den, N_num = dataset_eff.ComputeEffAlgo_SingleTauPNet(a)
         eff_algo = (N_num/N_den)
+
         print(f'Rate: {rate}')
         print(f'Algo Eff: {eff_algo}') 
-        print(f'Output score: {- eff_algo + loss(rate)}')
+        print(f'Output score: {- eff_algo + loss(rate, rate_budget)}')
         print('---------------------------------------------------------------------------------------------------------')
-        return - eff_algo + loss(rate)
+        return - eff_algo + loss(rate, rate_budget)
 
-    res = minimize(f, [0.70, 0.70], bounds=((0.5, 0.9), (0.5, 0.9)), method="L-BFGS-B", options={"eps": [0.005, 0.005]})
-
+    res = minimize(f, [0.95, 0.95], bounds=((0.8, 0.99), (0.8, 0.99)), method="L-BFGS-B", options={"eps": [0.01, 0.01]})
     return res.x
 
 if __name__ == '__main__':
@@ -38,23 +33,29 @@ if __name__ == '__main__':
     RefRun = int(config['RUNINFO']['ref_run'])
     HLT_name = config['HLT']['HLTname']
     L1A_physics = float(config['RUNINFO']['L1A_physics'])
-
     Rate_path = os.path.join(config['DATA']['RateDenPath'], f'Run_{RefRun}')
     Eff_path = os.path.join(config['DATA']['EffDenPath'], HLT_name)
+    PNetparam_t3 = float(config['OPT']['PNet_t3']) # optimise only t1 and t2
 
-    FileNameList_eff = "/afs/cern.ch/work/p/pdebryas/PNetAtHLT/data/EfficiencyDen/HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3/ZprimeToTauTau_M-4000.root"
+    FileNameList_eff = f"/afs/cern.ch/work/p/pdebryas/PNetAtHLT/data/EfficiencyDen/{HLT_name}/ZprimeToTauTau_M-4000.root" # optimisation with ZprimeToTauTau_M-4000 data
     FileNameList_rate = files_from_path(Rate_path)[0] # only one otherwise it's too long (gives good aprosimation for the rate)
 
     dataset_eff = SingleTauDataset(FileNameList_eff)
     dataset_rate = SingleTauDataset(FileNameList_rate)
 
-    optim_x = run_optimization(dataset_rate, dataset_eff)
+    optim_param = run_optimization(dataset_rate, dataset_eff, rate_budget = 15)
+    optim_param = np.append(optim_param, [PNetparam_t3])
 
     print('Optimisation finished:')
-    print("Optimized parameters:", optim_x)
-    optim_x = np.append(optim_x, [0])
+    print("Optimized parameters:", optim_param)
 
-    N_den, N_num = dataset_rate.get_Nnum_Nden_DiTauPNet(optim_x)
+    N_den, N_num = dataset_rate.get_Nnum_Nden_SingleTauPNet(optim_param)
     rate_opt = (N_num/N_den)*L1A_physics
 
     print("Approx. Rate:", rate_opt)
+
+    N_den, N_num = dataset_eff.ComputeEffAlgo_SingleTauPNet(optim_param)
+    algo_eff = (N_num/N_den)
+
+    print("Approx. Algo Eff:", algo_eff)
+

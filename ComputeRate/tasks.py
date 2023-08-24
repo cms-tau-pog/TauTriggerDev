@@ -2,9 +2,9 @@
 import law
 import os
 import shutil
-from HLTClass.dataset import Dataset
-from helpers import files_from_path, load_cfg_file, hadd_anatuple
+
 from law_customizations import Task, HTCondorWorkflow
+from helpers import files_from_path, load_cfg_file, hadd_anatuple
 
 class SaveEventsDenRate(Task, HTCondorWorkflow, law.LocalWorkflow):
     '''
@@ -35,7 +35,8 @@ class SaveEventsDenRate(Task, HTCondorWorkflow, law.LocalWorkflow):
         EphemeralFolderName = os.path.join(self.EphemeralFolder, f"EphemeralHLTPhysics{self.branch}_Run{self.runArea}/")
         output_root_file = os.path.join(self.output_path, f'EphemeralHLTPhysics{self.branch}_Run{self.runArea}.root')
         output_tmp_folder = os.path.join(self.tmp_folder, f"EphemeralHLTPhysics{self.branch}_Run{self.runArea}")
-
+        from HLTClass.dataset import Dataset
+        
         if os.path.exists(output_tmp_folder):
             print(f'A tmp folder which store tmp root files exist already: being deleted')
             shutil.rmtree(output_tmp_folder)
@@ -106,7 +107,7 @@ class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
         event_counter[intput_root_file] = {}
         print(f"For {os.path.basename(intput_root_file)}:")
 
-        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3', 'HLT_DoubleTauOrSingleTau']
         if self.HLT_name not in HLT_config:
             print(f'HLT name {self.HLT_name} not implemented in the code')
             raise
@@ -129,6 +130,15 @@ class ProduceRateFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
             else:
                 N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3()
 
+        if self.HLT_name == 'HLT_DoubleTauOrSingleTau':
+            from HLTClass.DoubleORSingleTauDataset import DoubleORSingleTauDataset
+            
+            eph_dataset = DoubleORSingleTauDataset(intput_root_file)
+            if self.PNetMode:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_DoubleORSinglePNet(self.PNetparam)
+            else:
+                N_den_i, N_num_i = eph_dataset.get_Nnum_Nden_HLT_DoubleORSingleDeepTau()
+                
         event_counter[intput_root_file]['N_den'] = N_den_i
         event_counter[intput_root_file]['N_num'] = N_num_i
 

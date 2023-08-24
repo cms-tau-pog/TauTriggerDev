@@ -1,4 +1,4 @@
-from helpers import compute_eff_witherr, load_cfg_file
+from helpers import compute_ratio_witherr, load_cfg_file
 import os 
 import uproot
 import awkward as ak
@@ -29,7 +29,7 @@ for i in range(len(MCDataFolderNames)):
     N_num += len(TausNum_pt)
 
 
-eff, err_low, err_up = compute_eff_witherr(N_num, N_den)
+eff, err_low, err_up = compute_ratio_witherr(N_num, N_den)
 
 if HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
     print(f"Total number of hadronic GenTaus with with vis. pt <= 20 and eta< 2.1: {N_den}")
@@ -38,7 +38,14 @@ if HLT_name == 'HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1':
     else:
         print(f"Total number of GenTaus matching with Tau/L1Tau passing {HLT_name} requirements: {N_num}")
 
-print('Computed rate: ')
+if HLT_name == 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3':
+    print(f"Total number of hadronic GenTaus with with vis. pt <= 20 and eta< 2.1: {N_den}")
+    if PNetMode:
+        print(f"Total number of GenTaus matching with Jet/L1Tau passing SingleTau path with Pnet param {PNetparam}: {N_num}")
+    else:
+        print(f"Total number of GenTaus matching with Tau/L1Tau passing {HLT_name} requirements: {N_num}")
+
+print('Computed Eff: ')
 print(f"Eff : {eff}")
 print(f"Eff_up : {err_low}")
 print(f"Eff_down : {err_up}")

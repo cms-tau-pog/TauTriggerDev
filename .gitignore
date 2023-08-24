@@ -7,3 +7,4 @@ ComputeEfficiency/result*
 jobs/
 logs/
 test.py
+plot_figures/figures

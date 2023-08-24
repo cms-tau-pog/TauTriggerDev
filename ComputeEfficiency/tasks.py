@@ -2,8 +2,9 @@
 import law
 import os
 import shutil
-from helpers import files_from_path, load_cfg_file, hadd_anatuple
+
 from law_customizations import Task, HTCondorWorkflow
+from helpers import files_from_path, load_cfg_file, hadd_anatuple
 
 class SaveEventsDenEfficiency(Task, HTCondorWorkflow, law.LocalWorkflow):
     '''
@@ -37,7 +38,7 @@ class SaveEventsDenEfficiency(Task, HTCondorWorkflow, law.LocalWorkflow):
             shutil.rmtree(output_tmp_folder)
         os.makedirs(output_tmp_folder)
 
-        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3', 'HLT_DoubleTauOrSingleTau']
         if self.HLT_name not in HLT_config:
             print(f'HLT name {self.HLT_name} not implemented in the code')
             raise
@@ -57,6 +58,11 @@ class SaveEventsDenEfficiency(Task, HTCondorWorkflow, law.LocalWorkflow):
                 from HLTClass.SingleTauDataset import SingleTauDataset
                 MC_dataset = SingleTauDataset(FileName)
                 MC_dataset.save_Event_Nden_eff_SingleTau(output_tmp_file)
+
+            if self.HLT_name == 'HLT_DoubleTauOrSingleTau':
+                from HLTClass.DoubleORSingleTauDataset import DoubleORSingleTauDataset
+                MC_dataset = DoubleORSingleTauDataset(FileName)
+                MC_dataset.save_Event_Nden_eff_DoubleORSingleTau(output_tmp_file)
 
         # Hadd the tmp files to a single root file
         hadd_anatuple(output_tmp_folder, output_root_file)
@@ -107,7 +113,7 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
         if not os.path.exists(input_root_file):
             raise('Input root file does not exist')
 
-        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3']
+        HLT_config = ['HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1', 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3', 'HLT_DoubleTauOrSingleTau']
         if self.HLT_name not in HLT_config:
             print(f'HLT name {self.HLT_name} not implemented in the code')
             raise
@@ -129,3 +135,12 @@ class ProduceEfficiencyFiles(Task, HTCondorWorkflow, law.LocalWorkflow):
                 MC_dataset.produceRoot_SingleTauPNet(output_root_file, self.PNetparam)
             else:
                 MC_dataset.produceRoot_HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3(output_root_file)
+
+        if self.HLT_name == 'HLT_DoubleTauOrSingleTau':
+            from HLTClass.DoubleORSingleTauDataset import DoubleORSingleTauDataset
+
+            MC_dataset = DoubleORSingleTauDataset(input_root_file)
+            if self.PNetMode:
+                MC_dataset.produceRoot_DoubleORSinglePNet(output_root_file, self.PNetparam)
+            else:
+                MC_dataset.produceRoot_DoubleORSingleDeepTau(output_root_file)

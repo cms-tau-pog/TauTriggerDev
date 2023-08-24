@@ -1,4 +1,4 @@
-from helpers import files_from_path, load_cfg_file, compute_eff_witherr
+from helpers import files_from_path, load_cfg_file, compute_ratio_witherr
 import os
 
 #compute rate with only 1 Ephemeral data file to give a quick aproximation of the rate (no need to run ProduceRateFiles task for that)
@@ -43,7 +43,17 @@ if HLT_name == 'HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3':
         N_den, N_num = dataset_rate.get_Nnum_Nden_HLT_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3()
         print(f'Quick rate computation for {HLT_name}:')
 
-rate, rate_low, rate_up = compute_eff_witherr(N_num, N_den)
+if HLT_name == 'HLT_DoubleTauOrSingleTau':
+    from HLTClass.DoubleORSingleTauDataset import DoubleORSingleTauDataset
+
+    dataset_rate = DoubleORSingleTauDataset(FileNameList_rate)
+
+    if PNetMode:
+        N_den, N_num = dataset_rate.get_Nnum_Nden_DoubleORSinglePNet(PNetparam)
+    else:
+        N_den, N_num = dataset_rate.get_Nnum_Nden_HLT_DoubleORSingleDeepTau()
+
+rate, rate_low, rate_up = compute_ratio_witherr(N_num, N_den)
 
 print(f"Rate : {rate*L1A_physics}")
 print(f"Rate_up : {rate_up*L1A_physics}")

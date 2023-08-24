@@ -10,7 +10,8 @@ def get_GenLepton_rdf(rdf):
     rdf = rdf.Define("GenLepton_eta", "ROOT::VecOps::RVec<float> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(GenLeptons.at(n).visibleP4().eta()); return out")
     rdf = rdf.Define("GenLepton_phi", "ROOT::VecOps::RVec<float> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(GenLeptons.at(n).visibleP4().phi()); return out")
     rdf = rdf.Define("GenLepton_kind", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).kind())); return out")
-    #rdf = rdf.Define("GenLepton_nChargedHad", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).nChargedHadrons())); return out")
-    #rdf = rdf.Define("GenLepton_nNeutralHad", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).nNeutralHadrons())); return out")
+    rdf = rdf.Define("GenLepton_nChargedHad", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).nChargedHadrons())); return out")
+    rdf = rdf.Define("GenLepton_nNeutralHad", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).nNeutralHadrons())); return out")
+    rdf = rdf.Define("GenLepton_charge", "ROOT::VecOps::RVec<int> out; for(size_t n = 0; n < GenLeptons.size(); ++n) out.push_back(static_cast<int>(GenLeptons.at(n).charge())); return out")
     
     return rdf
