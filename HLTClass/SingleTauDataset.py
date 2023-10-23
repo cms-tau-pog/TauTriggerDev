@@ -123,9 +123,11 @@ def evt_sel_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3(events, is_gen = False):
         return SingleTau_evt_mask, matchingTaus_mask
     
 # ------------------------------ Common functions for Single tau path ---------------------------------------------------------------
+
 def L1Tau_Tau120er2p1_selection(events):
+    L1Taus = get_L1Taus(events)
     # return mask for L1tau passing Tau120er2p1 selection
-    L1_Tau120er2p1_mask  = (events['L1Tau_pt'].compute() >= 120) & (np.abs(events['L1Tau_eta'].compute() <= 2.1))
+    L1_Tau120er2p1_mask  = (events['L1Tau_pt'].compute() >= 120) & (events['L1Tau_eta'].compute() <= 2.131) & (events['L1Tau_eta'].compute() >= -2.131)
     return L1_Tau120er2p1_mask
 
 def L1Tau_L2NN_selection_SingleTau(events):
@@ -256,6 +258,7 @@ class SingleTauDataset(Dataset):
 
         Tau_Num = (Tau_Den[matchingGentaus_mask])[SingleTau_evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
+
         #events = events[SingleTau_evt_mask]
         events_Num = events[SingleTau_evt_mask]
 

@@ -131,12 +131,14 @@ def evt_sel_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(events, n_min = 2, is_gen 
 # ------------------------------ Common functions for Ditau path ---------------------------------------------------------------
 def L1Tau_IsoTau34er2p1_selection(events):
     # return mask for L1tau passing IsoTau34er2p1 selection
-    L1_IsoTau34er2p1_mask = (events['L1Tau_hwPt'].compute() >= 0x44) & (events['L1Tau_hwEta'].compute() <= 0x30) & (events['L1Tau_hwEta'].compute() >= -49) & (events['L1Tau_hwIso'].compute() > 0 )
+    #L1_IsoTau34er2p1_mask = (events['L1Tau_hwPt'].compute() >= 0x44) & (events['L1Tau_hwEta'].compute() <= 0x30) & (events['L1Tau_hwEta'].compute() >= -49) & (events['L1Tau_hwIso'].compute() > 0 )
+    L1_IsoTau34er2p1_mask = (events['L1Tau_pt'].compute() >= 34) & (events['L1Tau_eta'].compute() <= 2.131) & (events['L1Tau_eta'].compute() >= -2.131) & (events['L1Tau_hwIso'].compute() > 0 )
     return L1_IsoTau34er2p1_mask
 
 def L1Tau_Tau70er2p1_selection(events):
     # return mask for L1tau passing Tau70er2p1 selection
-    L1_Tau70er2p1_mask  = (events['L1Tau_pt'].compute() >= 70) & (np.abs(events['L1Tau_eta'].compute() <= 2.131))
+    #L1_Tau70er2p1_mask  = (events['L1Tau_pt'].compute() >= 70) & (np.abs(events['L1Tau_eta'].compute() <= 2.131))
+    L1_Tau70er2p1_mask = (events['L1Tau_pt'].compute() >= 70) & (events['L1Tau_eta'].compute() <= 2.131) & (events['L1Tau_eta'].compute() >= -2.131) 
     return L1_Tau70er2p1_mask
 
 def L1Tau_L2NN_selection_DiTau(events):
