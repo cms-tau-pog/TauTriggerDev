@@ -1,5 +1,6 @@
-from helpers import delta_r
+from plot_figures.helpers import delta_r
 import numpy as np
+import os
 import uproot
 import awkward as ak
 import matplotlib.pyplot as plt
@@ -75,8 +76,8 @@ def plot_gaussian(x_data, plot_param, n_bins = 100, range_hist = [-0.2,0.2]):
     plt.xlim(range_hist[0],range_hist[1])
     plt.ylabel(plot_param['ylabel'])
     plt.grid("on")
-    plt.savefig('plot_figures/figures/' + plot_param['savefig'])
-    #plt.show()
+    plt.savefig( f'{os.getenv("RUN_PATH")}/plot_figures/figures/{plot_param["savefig"]}')
+    plt.close()
     return
 
 path_to_file = '/afs/cern.ch/work/p/pdebryas/PNetAtHLT/data/EfficiencyDen/HLT_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1/GluGluHToTauTau_M-125.root'
@@ -149,5 +150,5 @@ plt.xlim(bins[0],bins[-1])
 plt.ylabel(r'std($(p_T^{true}-p_T^{Jet})/p_T^{true}$)', fontsize = 17)
 plt.grid("on")
 plt.legend(prop={'size': 17})
-plt.savefig('plot_figures/figures/std_pt_ptcorr.pdf')
+plt.savefig(f'{os.getenv("RUN_PATH")}/plot_figures/figures/std_pt_ptcorr.pdf')
 plt.close()

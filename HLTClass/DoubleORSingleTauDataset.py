@@ -63,7 +63,7 @@ class DoubleORSingleTauDataset(Dataset):
         evt_mask_SingleTau = Denominator_Selection_SingleTau(GenLepton)
         evt_mask_DiTau = Denominator_Selection_DiTau(GenLepton)
         evt_mask = (evt_mask_SingleTau | evt_mask_DiTau)
-        print(f"Number of events with exactly 1 hadronic Tau (kind=5) or events with at least 2 Gen Tau with vis. pt >= 20, |eta|<2.1 and kind=5: {ak.sum(evt_mask)}")
+        print(f"Number of events with exactly 1 hadronic Tau (kind=5) or events with at least 2 Gen Tau: {ak.sum(evt_mask)}")
         self.Save_Event_Nden_Eff(events, GenLepton, evt_mask, tmp_file)
         return
 
@@ -75,18 +75,23 @@ class DoubleORSingleTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
-        print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
+        print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
         SingleTau_evt_mask, SingleTau_matchingGentaus_mask = evt_sel_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3(events, is_gen = True)
-        DiTau_evt_mask, DiTau_matchingTaus_mask = evt_sel_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(events, n_min = 1, is_gen = True)
+        DiTau_evt_mask, DiTau_matchingTaus_mask = evt_sel_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(events, n_min = 2, is_gen = True)
         # Or between the 2 
         evt_mask = SingleTau_evt_mask | DiTau_evt_mask
 
         Tau_Num = (Tau_Den[SingleTau_matchingGentaus_mask|DiTau_matchingTaus_mask])[evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events= events[evt_mask]
+        events_Num= events[evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
+
         return  
 
     def produceRoot_DoubleORSinglePNet(self, out_file, par):
@@ -97,10 +102,15 @@ class DoubleORSingleTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
+
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
         print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
         SingleTau_evt_mask, SingleTau_matchingGentaus_mask = evt_sel_SingleTau(events, self.par_frozen_SingleTau, is_gen = True)
-        DiTau_evt_mask, DiTau_matchingTaus_mask = evt_sel_DiTau(events, par, n_min=1, is_gen = True)
+        DiTau_evt_mask, DiTau_matchingTaus_mask = evt_sel_DiTau(events, par, n_min=2, is_gen = True)
 
         print(f'SingleTau_evt_mask: {np.sum(SingleTau_evt_mask)}')
         print(f'DiTau_evt_mask: {np.sum(DiTau_evt_mask)}')
@@ -114,9 +124,9 @@ class DoubleORSingleTauDataset(Dataset):
 
         Tau_Num = (Tau_Den[SingleTau_matchingGentaus_mask|DiTau_matchingTaus_mask])[evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events= events[evt_mask]
+        events_Num= events[evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
         return
 
     # ------------------------------ functions to Compute Efficiency for opt ---------------------------------------------------------------

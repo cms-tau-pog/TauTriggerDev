@@ -222,14 +222,19 @@ class SingleTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
+
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
         print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
         SingleTau_evt_mask, matchingGentaus_mask = evt_sel_LooseDeepTauPFTauHPS180_L2NN_eta2p1_v3(events, is_gen = True)
         Tau_Num = (Tau_Den[matchingGentaus_mask])[SingleTau_evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events = events[SingleTau_evt_mask]
+        events_Num = events[SingleTau_evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
         return
 
     def produceRoot_SingleTauPNet(self, out_file, par):
@@ -240,16 +245,21 @@ class SingleTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
+
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
         print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
         SingleTau_evt_mask, matchingGentaus_mask = evt_sel_SingleTau(events, par, is_gen = True)
 
         Tau_Num = (Tau_Den[matchingGentaus_mask])[SingleTau_evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events = events[SingleTau_evt_mask]
+        #events = events[SingleTau_evt_mask]
+        events_Num = events[SingleTau_evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
-
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
         return
     
     # ------------------------------ functions to Compute Efficiency for opt ---------------------------------------------------------------

@@ -209,11 +209,15 @@ class Dataset:
 
         return
     
-    def save_info(self, events, Tau_Den, Tau_Num, out_file):
+    def save_info(self, events_Den, events_Num, Tau_Den, Tau_Num, out_file):
         # saving infos
-        lst_evt = {}
-        lst_evt['nPFPrimaryVertex'] = np.array(events['nPFPrimaryVertex'].compute())
-        lst_evt['nPFSecondaryVertex'] = np.array(events['nPFSecondaryVertex'].compute())
+        lst_evt_Den = {}
+        lst_evt_Den['nPFPrimaryVertex'] = np.array(events_Den['nPFPrimaryVertex'].compute())
+        lst_evt_Den['nPFSecondaryVertex'] = np.array(events_Den['nPFSecondaryVertex'].compute())
+
+        lst_evt_Num = {}
+        lst_evt_Num['nPFPrimaryVertex'] = np.array(events_Num['nPFPrimaryVertex'].compute())
+        lst_evt_Num['nPFSecondaryVertex'] = np.array(events_Num['nPFSecondaryVertex'].compute())
 
         lst_Den = {}
         lst_Den['Tau_pt'] = Tau_Den.pt
@@ -234,7 +238,8 @@ class Dataset:
         lst_Num['Tau_charge'] = Tau_Num.charge
 
         with uproot.create(out_file, compression=uproot.ZLIB(4)) as file:
-            file["events"] = lst_evt
+            file["eventsDen"] = lst_evt_Den
             file["TausDen"] = lst_Den
+            file["eventsNum"] = lst_evt_Num
             file["TausNum"] = lst_Num
-        return
+        return 

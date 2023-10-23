@@ -158,12 +158,8 @@ def get_selL1Taus(L1Taus, L1Tau_IsoTau34er2p1_mask, L1Tau_Tau70er2p1_mask, n_min
     L1Taus_Sel = L1Taus
     L1Taus_Sel = ak.where(IsoTau34er2p1_and_Tau70er2p1 == False, L1Taus_Sel, L1Taus[L1Tau_IsoTau34er2p1_mask | L1Tau_Tau70er2p1_mask])
     L1Taus_Sel = ak.where(IsoTau34er2p1_and_notTau70er2p1 == False, L1Taus_Sel, L1Taus[L1Tau_IsoTau34er2p1_mask]) 
-    L1Taus_Sel = ak.where(notIsoTau34er2p1_and_Tau70er2p1 == False, L1Taus_Sel, L1Taus[L1Tau_Tau70er2p1_mask]) 
+    L1Taus_Sel = ak.where(notIsoTau34er2p1_and_Tau70er2p1 == False, L1Taus_Sel, L1Taus[L1Tau_Tau70er2p1_mask])
     return L1Taus_Sel
-    
-
-
-
 
 class DiTauDataset(Dataset):
     def __init__(self, fileName):
@@ -216,14 +212,19 @@ class DiTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
+
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
         print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
         DiTau_evt_mask, matchingGentaus_mask = evt_sel_DoubleMediumDeepTauPFTauHPS35_L2NN_eta2p1(events, n_min = 1, is_gen = True)
         Tau_Num = (Tau_Den[matchingGentaus_mask])[DiTau_evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events = events[DiTau_evt_mask]
+        events_Num = events[DiTau_evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
         return
 
     def produceRoot_DiTauPNet(self, out_file, par):
@@ -234,15 +235,20 @@ class DiTauDataset(Dataset):
         GenTau_mask = hGenTau_selection(events)
         GenTaus = get_GenTaus(events)
         Tau_Den = GenTaus[GenTau_mask]
+
+        mask_den_selection = ak.num(Tau_Den['pt']) >=2
+        Tau_Den = Tau_Den[mask_den_selection]
+        events = events[mask_den_selection]
+
         print(f"Number of GenTaus passing denominator selection: {len(ak.flatten(Tau_Den))}")
 
         DiTau_evt_mask, matchingGentaus_mask = evt_sel_DiTau(events, par, n_min=1, is_gen = True)
 
         Tau_Num = (Tau_Den[matchingGentaus_mask])[DiTau_evt_mask]
         print(f"Number of GenTaus passing numerator selection: {len(ak.flatten(Tau_Num))}")
-        events = events[DiTau_evt_mask]
+        events_Num = events[DiTau_evt_mask]
 
-        self.save_info(events, Tau_Den, Tau_Num, out_file)
+        self.save_info(events, events_Num, Tau_Den, Tau_Num, out_file)
 
         return
 
